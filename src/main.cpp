@@ -226,7 +226,7 @@ int main(int argc, char *argv[]) {
 		/* Increment ttl */
 		ipv4->timeToLive = ++ttl;
 
-		cout << "[TTL=" << (int) ttl << "]";
+		cout << (int) ttl << "|";
 
 		/* Send echoRequest */
 		if((answer = ::sendto(socketDescriptor, echoRequestBuffer, echoRequestLength, 0, (struct sockaddr *) &destination, sizeof(struct sockaddr_in))) == SENDTO_ERROR) {
@@ -254,15 +254,27 @@ int main(int argc, char *argv[]) {
 		struct icmp_t *answer_icmp = (struct icmp_t *) (receptionBuffer + sizeof(struct ipv4_t));
 
 		if((answer_ipv4->version == IPV4_VERSION) and (answer_ipv4->protocol == IPV4_PROTO_ICMP)) {
+
+			char answer_host[NI_MAXHOST], answer_service[NI_MAXSERV];
+			struct sockaddr_in answer_address;
+			::memset(&answer_address, 0, sizeof(struct sockaddr_in));
+			answer_address.sin_family = AF_INET;
+			answer_address.sin_addr.s_addr = answer_ipv4->sourceAddress;
+			answer = getnameinfo((struct sockaddr *) &answer_address, sizeof(struct sockaddr_in), answer_host, NI_MAXHOST, answer_service, NI_MAXSERV, NI_NUMERICSERV);
+			if(answer != 0) {
+				cerr << gai_strerror(answer) << endl;
+				answer_host[0] = 0;
+			}
+
 			if(answer_icmp->type == ICMP_ECHO_REQUEST) {
-				cout << "[ICMP_ECHO_REQUEST, from=" << inet_ntoa((struct in_addr) { answer_ipv4->sourceAddress }) << "]" << endl;
+				cout << answer_host << " (" << inet_ntoa(answer_address.sin_addr) << ")" << endl;
 			}
 			else if(answer_icmp->type == ICMP_ECHO_REPLY) {
-				cout << "[ICMP_ECHO_REPLY, from=" << inet_ntoa((struct in_addr) { answer_ipv4->sourceAddress }) << "]" << endl;
+				cout << answer_host << " (" << inet_ntoa(answer_address.sin_addr) << ")" << endl;
 				done = true;
 			}
 			else if(answer_icmp->type == ICMP_TIME_EXCEEDED) {
-				cout << "[ICMP_TIME_EXCEEDED, from=" << inet_ntoa((struct in_addr) { answer_ipv4->sourceAddress }) << "]" << endl;
+				cout << answer_host << " (" << inet_ntoa(answer_address.sin_addr) << ")" << endl;
 			}
 			else {
 				cerr << "[answer_icmp->type != ICMP_TIME_EXCEEDED, ICMP_ECHO_REPLY, ICMP_ECHO_REQUEST]" << endl;
