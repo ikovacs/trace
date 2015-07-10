@@ -14,6 +14,7 @@ using namespace std;
 #include <arpa/inet.h>
 #include <netdb.h>
 #include <unistd.h>
+#include <sys/time.h>
 
 #define GETIFADDR_ERROR -1
 #define GETADDRINFO_SUCCESS 0
@@ -21,6 +22,8 @@ using namespace std;
 #define SETSOCKOPT_ERROR -1
 #define SENDTO_ERROR -1
 #define RECV_ERROR -1
+
+#define TIMEOUT 1
 
 /*
 		0                   1                   2                   3
@@ -121,8 +124,8 @@ int main(int argc, char *argv[]) {
 	const char *iface = argv[1];
 	const char *host = argv[2];
 
-	cout << "Interface: " << iface << endl;
-	cout << "Destination: " << host << endl;
+	//cout << "Interface: " << iface << endl;
+	//cout << "Destination: " << host << endl;
 
 	/* Get interface ip address. */
 	struct sockaddr_in source;
@@ -144,7 +147,7 @@ int main(int argc, char *argv[]) {
 		}
 	}
 	if(ifa == 0) {
-		cerr << "ifap == 0" << endl;
+		cerr << "Unknown interface" << endl;
 		return -1;
 	}
 	::freeifaddrs(ifap);
@@ -163,9 +166,13 @@ int main(int argc, char *argv[]) {
 	}
 	for(ai = aip; ai != 0; ai = ai->ai_next) {
 		struct sockaddr_in *address = (struct sockaddr_in *) ai->ai_addr;
-		cout << ai->ai_canonname << " " << inet_ntoa(address->sin_addr) << endl;
+		cout << "# " << ai->ai_canonname << " " << inet_ntoa(address->sin_addr) << endl;
 		::memcpy(&destination, address, sizeof(struct sockaddr_in));
 		break;
+	}
+	if(aip == 0) {
+		cerr << "Unknown interface" << endl;
+		return -1;
 	}
 	::freeaddrinfo(aip);
 
@@ -181,7 +188,7 @@ int main(int argc, char *argv[]) {
 		return -1;
 	}
 	struct timeval timeOut;
-	timeOut.tv_sec = 1;
+	timeOut.tv_sec = TIMEOUT;
 	timeOut.tv_usec = 0;
 	if(::setsockopt(socketDescriptor, SOL_SOCKET, SO_RCVTIMEO, &timeOut, sizeof(struct timeval)) == SETSOCKOPT_ERROR) {
 		cerr << strerror(errno) << endl;
@@ -220,13 +227,25 @@ int main(int argc, char *argv[]) {
 	char *receptionBuffer = new char[length];
 
 	bool done = false;
-	unsigned char ttl = 0;
+	int pingPerTtl = 0;
+	int maxPingPerTtl = 20;
 
-	while(!done) {
+	ipv4->timeToLive = 1;
+
+	while(!(done and (pingPerTtl > (maxPingPerTtl-1)))) {
+
 		/* Increment ttl */
-		ipv4->timeToLive = ++ttl;
+		if(pingPerTtl == maxPingPerTtl) {
+			ipv4->timeToLive++;
+			pingPerTtl = 0;
+		}
 
-		cout << (int) ttl << "|";
+		cout << (int) ipv4->timeToLive << "|";
+
+		/* Start time measurement */
+		struct timespec start, stop;
+		// CLOCK_MONOTONIC
+		clock_gettime(CLOCK_REALTIME, &start);
 
 		/* Send echoRequest */
 		if((answer = ::sendto(socketDescriptor, echoRequestBuffer, echoRequestLength, 0, (struct sockaddr *) &destination, sizeof(struct sockaddr_in))) == SENDTO_ERROR) {
@@ -237,10 +256,26 @@ int main(int argc, char *argv[]) {
 		/* Receive answer */
 		answer = ::recv(socketDescriptor, receptionBuffer, length, 0);
 
+		/* Stop time measurement */
+		clock_gettime(CLOCK_REALTIME, &stop);
+
+		timespec temp;
+		if ((stop.tv_nsec - start.tv_nsec) < 0) {
+			temp.tv_sec = stop.tv_sec - start.tv_sec - 1;
+			temp.tv_nsec = 1000000000 + stop.tv_nsec - start.tv_nsec;
+		} else {
+			temp.tv_sec = stop.tv_sec - start.tv_sec;
+			temp.tv_nsec = stop.tv_nsec - start.tv_nsec;
+		}
+
+		double millis = ((double) temp.tv_nsec) / 1000000.0;
+		//long int millis = temp.tv_nsec;
+
+
 		/* Check answer is valid */
 		if((answer == RECV_ERROR)) {
 			if(errno == EAGAIN) {
-				cout << "[TIMED_OUT]" << endl;
+				cout << "|TIMED_OUT" << endl;
 				continue;
 			}
 			else {
@@ -267,14 +302,14 @@ int main(int argc, char *argv[]) {
 			}
 
 			if(answer_icmp->type == ICMP_ECHO_REQUEST) {
-				cout << answer_host << " (" << inet_ntoa(answer_address.sin_addr) << ")" << endl;
+				cout << answer_host << " (" << inet_ntoa(answer_address.sin_addr) << ")|" << millis << endl;
 			}
 			else if(answer_icmp->type == ICMP_ECHO_REPLY) {
-				cout << answer_host << " (" << inet_ntoa(answer_address.sin_addr) << ")" << endl;
+				cout << answer_host << " (" << inet_ntoa(answer_address.sin_addr) << ")|" << millis << endl;
 				done = true;
 			}
 			else if(answer_icmp->type == ICMP_TIME_EXCEEDED) {
-				cout << answer_host << " (" << inet_ntoa(answer_address.sin_addr) << ")" << endl;
+				cout << answer_host << " (" << inet_ntoa(answer_address.sin_addr) << ")|" << millis << endl;
 			}
 			else {
 				cerr << "[answer_icmp->type != ICMP_TIME_EXCEEDED, ICMP_ECHO_REPLY, ICMP_ECHO_REQUEST]" << endl;
@@ -283,11 +318,15 @@ int main(int argc, char *argv[]) {
 		else {
 			cerr << "[(answer_ipv4->version != IPV4_VERSION) or (answer_ipv4->protocol != IPV4_PROTO_ICMP)]" << endl;
 		}
+
+		sleep(1);
+		pingPerTtl++;
 	}
 
 	/* Free resources */
 	delete[] echoRequestBuffer;
 	delete[] receptionBuffer;
+	::close(socketDescriptor);
 
 	return 0;
 }
