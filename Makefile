@@ -9,6 +9,7 @@ OBJECTS := $(addprefix $(OBJECTS_FOLDER)/, $(notdir $(SOURCES:%.cpp=%.o)))
 CXX_FLAGS := -g -ggdb -std=c++11 -I./$(HEADERS_FOLDER)/
 $(TARGET): Makefile folders $(HEADERS) $(OBJECTS)
 	g++ -o $(TARGET) $(OBJECTS) -lrt
+	sudo setcap cap_net_raw=+ep $(TARGET)
 folders:
 	mkdir -p $(TARGET_FOLDER) $(OBJECTS_FOLDER)
 $(OBJECTS_FOLDER)/%.o: $(HEADERS_FOLDER)/%.hpp $(SOURCES_FOLDER)/%.cpp

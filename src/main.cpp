@@ -4,6 +4,7 @@ using namespace std;
 
 /* C */
 #include <cstring>
+#include <cmath>
 
 #include <sys/ioctl.h>
 #include <net/if.h>
@@ -241,12 +242,10 @@ int main(int argc, char *argv[]) {
 			pingPerTtl = 0;
 		}
 
-		cout << (int) ipv4->timeToLive << "|";
-
 		/* Start time measurement */
 		struct timespec start, stop;
 		// CLOCK_MONOTONIC
-		clock_gettime(CLOCK_REALTIME, &start);
+		clock_gettime(CLOCK_MONOTONIC, &start);
 
 		/* Send echoRequest */
 		if((answer = ::sendto(socketDescriptor, echoRequestBuffer, echoRequestLength, 0, (struct sockaddr *) &destination, sizeof(struct sockaddr_in))) == SENDTO_ERROR) {
@@ -258,7 +257,7 @@ int main(int argc, char *argv[]) {
 		answer = ::recv(socketDescriptor, receptionBuffer, length, 0);
 
 		/* Stop time measurement */
-		clock_gettime(CLOCK_REALTIME, &stop);
+		clock_gettime(CLOCK_MONOTONIC, &stop);
 
 		timespec temp;
 		if ((stop.tv_nsec - start.tv_nsec) < 0) {
@@ -269,14 +268,14 @@ int main(int argc, char *argv[]) {
 			temp.tv_nsec = stop.tv_nsec - start.tv_nsec;
 		}
 
-		double millis = ((double) temp.tv_nsec) / 1000000.0;
+		unsigned int millis = (unsigned int) ::round(((double) temp.tv_nsec) / 1000000.0);
 		//long int millis = temp.tv_nsec;
 
 
 		/* Check answer is valid */
 		if((answer == RECV_ERROR)) {
 			if(errno == EAGAIN) {
-				cout << "|TIMED_OUT" << endl;
+				//cout << "|TIMED_OUT" << endl;
 				continue;
 			}
 			else {
@@ -301,6 +300,8 @@ int main(int argc, char *argv[]) {
 				cerr << gai_strerror(answer) << endl;
 				answer_host[0] = 0;
 			}
+
+			cout << (int) ipv4->timeToLive << "|";
 
 			if(answer_icmp->type == ICMP_ECHO_REQUEST) {
 				cout << answer_host << " (" << inet_ntoa(answer_address.sin_addr) << ")|" << millis << endl;
