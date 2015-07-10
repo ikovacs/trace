@@ -118,11 +118,13 @@ int main(int argc, char *argv[]) {
 
 	int answer;
 
+	int maxPingPerTtl = std::stoi(argv[1]);
+
 	if(argc < 3)
 		return -1;
 
-	const char *iface = argv[1];
-	const char *host = argv[2];
+	const char *iface = argv[2];
+	const char *host = argv[3];
 
 	//cout << "Interface: " << iface << endl;
 	//cout << "Destination: " << host << endl;
@@ -228,7 +230,6 @@ int main(int argc, char *argv[]) {
 
 	bool done = false;
 	int pingPerTtl = 0;
-	int maxPingPerTtl = 20;
 
 	ipv4->timeToLive = 1;
 
