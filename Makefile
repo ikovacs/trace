@@ -7,14 +7,16 @@ SOURCES := $(wildcard $(SOURCES_FOLDER)/*.cpp)
 HEADERS := $(wildcard $(SOURCES_FOLDER)/*.hpp)
 OBJECTS := $(addprefix $(OBJECTS_FOLDER)/, $(notdir $(SOURCES:%.cpp=%.o)))
 CXX_FLAGS := -g -ggdb -std=c++11 -I./$(HEADERS_FOLDER)/
-$(TARGET): Makefile folders $(HEADERS) $(OBJECTS)
+all: $(TARGET)
+$(TARGET): Makefile $(HEADERS) $(OBJECTS)
+	@mkdir -p $(TARGET_FOLDER)
 	g++ -o $(TARGET) $(OBJECTS) -lrt
-	sudo setcap cap_net_raw=+ep $(TARGET)
-folders:
-	mkdir -p $(TARGET_FOLDER) $(OBJECTS_FOLDER)
-$(OBJECTS_FOLDER)/%.o: $(HEADERS_FOLDER)/%.hpp $(SOURCES_FOLDER)/%.cpp
+	@sudo setcap cap_net_raw=+ep $(TARGET)
+$(OBJECTS_FOLDER)/%.o: $(SOURCES_FOLDER)/%.cpp $(HEADERS_FOLDER)/%.hpp
+	@mkdir -p $(OBJECTS_FOLDER)
 	g++ $(CXX_FLAGS) -o $@ -c $<
 $(OBJECTS_FOLDER)/%.o: $(SOURCES_FOLDER)/%.cpp
+	@mkdir -p $(OBJECTS_FOLDER)
 	g++ $(CXX_FLAGS) -o $@ -c $<
 clean:
 	rm -rf $(TARGET_FOLDER) $(OBJECTS_FOLDER)

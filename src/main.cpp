@@ -115,6 +115,15 @@ unsigned short internetChecksum(const void *buffer, int count) {
 	return ~sum;
 }
 
+#include <NetworkInterface.hpp>
+
+int main() {
+	AAA aaa;
+	aaa.allInterfaces();
+	return 0;
+}
+
+/*
 int main(int argc, char *argv[]) {
 
 	int answer;
@@ -130,7 +139,7 @@ int main(int argc, char *argv[]) {
 	//cout << "Interface: " << iface << endl;
 	//cout << "Destination: " << host << endl;
 
-	/* Get interface ip address. */
+	// Get interface ip address. /
 	struct sockaddr_in source;
 	struct ifaddrs *ifap, *ifa;
 	if(::getifaddrs(&ifap) == GETIFADDR_ERROR) {
@@ -155,7 +164,7 @@ int main(int argc, char *argv[]) {
 	}
 	::freeifaddrs(ifap);
 
-	/* Resolve host address. */
+	// Resolve host address. /
 	struct sockaddr_in destination;
 	const char *service = 0;
 	struct addrinfo hints, *aip, *ai;
@@ -179,7 +188,7 @@ int main(int argc, char *argv[]) {
 	}
 	::freeaddrinfo(aip);
 
-	/* Create socket */
+	// Create socket /
 	int socketDescriptor;
 	if((socketDescriptor = ::socket(AF_INET, SOCK_RAW, IPPROTO_ICMP)) == SOCKET_ERROR) {
 		cerr << strerror(errno) << endl;
@@ -202,7 +211,7 @@ int main(int argc, char *argv[]) {
 		return -1;
 	}
 
-	/* Create echo-request */
+	// Create echo-request /
 	int echoRequestLength = sizeof(struct ipv4_t) + sizeof(struct icmp_t);
 	char *echoRequestBuffer = new char[echoRequestLength];
 	::memset(echoRequestBuffer, 0, echoRequestLength);
@@ -225,7 +234,7 @@ int main(int argc, char *argv[]) {
 	icmp->data.echoRequest.sequenceNumber = ::htons((unsigned short) 1);
 	icmp->checksum = internetChecksum(icmp, sizeof(struct icmp_t));
 
-	/* Create receive buffer */
+	// Create receive buffer /
 	int length = 1500;
 	char *receptionBuffer = new char[length];
 
@@ -236,27 +245,27 @@ int main(int argc, char *argv[]) {
 
 	while(!(done and (pingPerTtl > (maxPingPerTtl-1)))) {
 
-		/* Increment ttl */
+		// Increment ttl /
 		if(pingPerTtl == maxPingPerTtl) {
 			ipv4->timeToLive++;
 			pingPerTtl = 0;
 		}
 
-		/* Start time measurement */
+		// Start time measurement /
 		struct timespec start, stop;
 		// CLOCK_MONOTONIC
 		clock_gettime(CLOCK_MONOTONIC, &start);
 
-		/* Send echoRequest */
+		// Send echoRequest /
 		if((answer = ::sendto(socketDescriptor, echoRequestBuffer, echoRequestLength, 0, (struct sockaddr *) &destination, sizeof(struct sockaddr_in))) == SENDTO_ERROR) {
 			cerr << strerror(errno) << endl;
 			return -1;
 		}
 
-		/* Receive answer */
+		// Receive answer /
 		answer = ::recv(socketDescriptor, receptionBuffer, length, 0);
 
-		/* Stop time measurement */
+		// Stop time measurement /
 		clock_gettime(CLOCK_MONOTONIC, &stop);
 
 		timespec temp;
@@ -272,7 +281,7 @@ int main(int argc, char *argv[]) {
 		//long int millis = temp.tv_nsec;
 
 
-		/* Check answer is valid */
+		// Check answer is valid //
 		if((answer == RECV_ERROR)) {
 			if(errno == EAGAIN) {
 				//cout << "|TIMED_OUT" << endl;
@@ -284,7 +293,7 @@ int main(int argc, char *argv[]) {
 			}
 		}
 
-		/* Parse buffer, search for: time-exceeded, echo-reply or echo-request */
+		// Parse buffer, search for: time-exceeded, echo-reply or echo-request /
 		struct ipv4_t *answer_ipv4 = (struct ipv4_t *) receptionBuffer;
 		struct icmp_t *answer_icmp = (struct icmp_t *) (receptionBuffer + sizeof(struct ipv4_t));
 
@@ -325,10 +334,11 @@ int main(int argc, char *argv[]) {
 		pingPerTtl++;
 	}
 
-	/* Free resources */
+	// Free resources /
 	delete[] echoRequestBuffer;
 	delete[] receptionBuffer;
 	::close(socketDescriptor);
 
 	return 0;
 }
+*/
