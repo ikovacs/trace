@@ -10,12 +10,15 @@
 #include <Exception.hpp>
 #include <Assert.hpp>
 
+enum AddressFamily { IPv4AddressFamily = AF_INET, IPv6AddressFamily = AF_INET6 };
+
 class SocketAddress {
 public:
 	SocketAddress(const struct sockaddr *socketAddress);
 	SocketAddress(const SocketAddress &socketAddress);
 	~SocketAddress();
-	std::string address() const;
+	AddressFamily family() const;
+	std::string toString() const;
 protected:
 	void initializeWith(const struct sockaddr *socketAddress);
 protected:

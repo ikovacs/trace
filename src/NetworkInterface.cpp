@@ -82,25 +82,25 @@ std::string NetworkInterface::name() const {
 	return _name;
 }
 
-std::string NetworkInterface::address() const {
+const SocketAddress& NetworkInterface::address() const {
 	AssertNotNull(_address);
-	return _address->address();
+	return *_address;
 }
 
-std::string NetworkInterface::netmask() const {
+const SocketAddress& NetworkInterface::netmask() const {
 	AssertNotNull(_netmask);
-	return _netmask->address();
+	return *_netmask;
 }
 
 /*
-	Description: Yields a list with all network interfaces for running host.
+	Description: Yields a vector with all network interfaces for running host.
 */
 
-std::list<NetworkInterface> NetworkInterface::allInterfaces() {
+std::vector<NetworkInterface> NetworkInterface::allInterfaces() {
 	struct ifaddrs *ifap, *ifa;
 	if(::getifaddrs(&ifap) == GETIFADDR_ERROR)
 		throw Exception(strerror(errno));
-	std::list<NetworkInterface> interfaces;
+	std::vector<NetworkInterface> interfaces;
 	for(ifa = ifap; ifa != 0; ifa = ifa->ifa_next) {
 		if(ifa->ifa_addr->sa_family != AF_PACKET) {
 			NetworkInterface interface(ifa);

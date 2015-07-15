@@ -2,7 +2,7 @@
 #define __NETWORK_INTERFACE_H__
 
 #include <iostream>
-#include <list>
+#include <vector>
 
 #include <sys/types.h>
 #include <ifaddrs.h>
@@ -28,10 +28,10 @@ public:
 	bool isPointToPointLink() const;
 
 	std::string name() const;
-	std::string address() const;
-	std::string netmask() const;
+	const SocketAddress& address() const;
+	const SocketAddress& netmask() const;
 
-	static std::list<NetworkInterface> allInterfaces();
+	static std::vector<NetworkInterface> allInterfaces();
 
 protected:
 	void initializePointers();

@@ -22,7 +22,10 @@ void SocketAddress::initializeWith(const struct sockaddr *socketAddress) {
 		::memcpy(_socketAddress, socketAddress, sizeof(struct sockaddr_in6));
 	}
 }
-std::string SocketAddress::address() const {
+AddressFamily SocketAddress::family() const {
+	return (AddressFamily) _socketAddress->sa_family;
+}
+std::string SocketAddress::toString() const {
 	AssertNotNull(_socketAddress);
 	int max = (INET_ADDRSTRLEN > INET_ADDRSTRLEN)? INET_ADDRSTRLEN : INET6_ADDRSTRLEN;
 	char stringAddress[max];
@@ -33,6 +36,6 @@ std::string SocketAddress::address() const {
 	return stringAddress;
 }
 std::ostream& operator<<(std::ostream &ostream, const SocketAddress &socketAddress) {
-	ostream << socketAddress.address();
+	ostream << socketAddress.toString();
 	return ostream;
 }

@@ -115,22 +115,37 @@ unsigned short internetChecksum(const void *buffer, int count) {
 }
 
 #include <NetworkInterface.hpp>
+#include <InternetAddress.hpp>
 
 using namespace std;
 
 class TraceApplication {
 public:
-	static int execute() {
-		list<NetworkInterface> ifaces = NetworkInterface::allInterfaces();
-		for(list<NetworkInterface>::const_iterator iface = ifaces.begin(); iface != ifaces.end(); iface++) {
-			cout << *iface << endl;
+	static int execute(int argc, char *argv[]) {
+
+		/* list interfaces */
+		const NetworkInterface *enp2s0;
+		vector<NetworkInterface> ifaces = NetworkInterface::allInterfaces();
+		for(vector<NetworkInterface>::const_iterator iface = ifaces.begin(); iface != ifaces.end(); iface++) {
+			if(iface->name() == "enp2s0" and iface->address().family() == IPv4AddressFamily) {
+				enp2s0 = &*iface;
+				cout << *enp2s0 << endl;
+			}
 		}
+
+		/* resolve hostname */
+
+		vector<InternetAddress> addresses = InternetAddress::resolve("www.google.com");
+		for(int i = 0; i < addresses.size(); i++) {
+			cout << addresses[i] << endl;
+		}
+
 		return 0;
 	}
 };
 
-int main() {
-	return TraceApplication::execute();
+int main(int argc, char *argv[]) {
+	return TraceApplication::execute(argc, argv);
 }
 
 /*
@@ -148,31 +163,6 @@ int main(int argc, char *argv[]) {
 
 	//cout << "Interface: " << iface << endl;
 	//cout << "Destination: " << host << endl;
-
-	// Get interface ip address. /
-	struct sockaddr_in source;
-	struct ifaddrs *ifap, *ifa;
-	if(::getifaddrs(&ifap) == GETIFADDR_ERROR) {
-		cerr << strerror(errno) << endl;
-		return -1;
-	}
-	for(ifa = ifap; ifa != 0; ifa = ifa->ifa_next) {
-		const char* name = ifa->ifa_name;
-		if(::strcmp(name, iface) == 0) {
-			struct sockaddr_in *address = (struct sockaddr_in *) ifa->ifa_addr;
-			int family = address->sin_family;
-			int flags = ifa->ifa_flags;
-			if((family == AF_INET) and (flags & IFF_UP)) {
-				::memcpy(&source, address, sizeof(struct sockaddr_in));
-				break;
-			}
-		}
-	}
-	if(ifa == 0) {
-		cerr << "Unknown interface" << endl;
-		return -1;
-	}
-	::freeifaddrs(ifap);
 
 	// Resolve host address. /
 	struct sockaddr_in destination;
