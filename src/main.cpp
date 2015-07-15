@@ -117,10 +117,17 @@ unsigned short internetChecksum(const void *buffer, int count) {
 
 #include <NetworkInterface.hpp>
 
+class TraceApplication {
+public:
+	static int main() {
+		AAA aaa;
+		aaa.allInterfaces();
+		return 0;
+	}
+};
+
 int main() {
-	AAA aaa;
-	aaa.allInterfaces();
-	return 0;
+	return TraceApplication::main();
 }
 
 /*

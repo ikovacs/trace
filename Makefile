@@ -11,7 +11,7 @@ all: $(TARGET)
 $(TARGET): Makefile $(HEADERS) $(OBJECTS)
 	@mkdir -p $(TARGET_FOLDER)
 	g++ -o $(TARGET) $(OBJECTS) -lrt
-	@sudo setcap cap_net_raw=+ep $(TARGET)
+#	@sudo setcap cap_net_raw=+ep $(TARGET)
 $(OBJECTS_FOLDER)/%.o: $(SOURCES_FOLDER)/%.cpp $(HEADERS_FOLDER)/%.hpp
 	@mkdir -p $(OBJECTS_FOLDER)
 	g++ $(CXX_FLAGS) -o $@ -c $<

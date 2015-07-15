@@ -17,8 +17,26 @@
 
 class NetworkInterface {
 public:
-	void load(const struct ifaddrs *interfaceAddress);
-	friend std::ostream& operator<<(std::ostream &ostream, const NetworkInterface &networkInterface);
+	NetworkInterface();
+	~NetworkInterface();
+
+	void initializeWith(const struct ifaddrs *ifa);
+
+	bool isUp() const;
+	bool isRunning() const;
+	bool isPointToPointLink() const;
+
+	std::string name() const;
+	std::string address() const;
+	std::string netmask() const;
+
+protected:
+	std::string _name;
+	unsigned int _flags;
+	struct sockaddr *_address;
+	struct sockaddr *_netmask;
+	struct sockaddr *_broadcast;
+	struct sockaddr *_pointToPoint;
 };
 
 std::ostream& operator<<(std::ostream &ostream, const NetworkInterface &networkInterface);
@@ -29,5 +47,6 @@ public:
 };
 
 #define GETIFADDR_ERROR -1
+#define deleteIfNotNull(pointer) if(pointer != 0) { delete pointer; pointer = 0; }
 
 #endif /* __NETWORK_INTERFACE_H__ */
