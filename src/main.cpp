@@ -120,7 +120,7 @@ using namespace std;
 
 class TraceApplication {
 public:
-	static int main() {
+	static int execute() {
 		list<NetworkInterface> ifaces = NetworkInterface::allInterfaces();
 		for(list<NetworkInterface>::const_iterator iface = ifaces.begin(); iface != ifaces.end(); iface++) {
 			cout << *iface << endl;
@@ -130,7 +130,7 @@ public:
 };
 
 int main() {
-	return TraceApplication::main();
+	return TraceApplication::execute();
 }
 
 /*

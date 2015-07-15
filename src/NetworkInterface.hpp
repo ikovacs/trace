@@ -19,7 +19,6 @@
 
 class NetworkInterface {
 public:
-	NetworkInterface();
 	NetworkInterface(const struct ifaddrs *ifa);
 	NetworkInterface(const NetworkInterface &networkInterface);
 	~NetworkInterface();
@@ -35,6 +34,7 @@ public:
 	static std::list<NetworkInterface> allInterfaces();
 
 protected:
+	void initializePointers();
 	void initializeWith(const struct ifaddrs *ifa);
 
 protected:

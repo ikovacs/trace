@@ -11,7 +11,7 @@ SocketAddress::~SocketAddress() {
 	delete _socketAddress;
 }
 void SocketAddress::initializeWith(const struct sockaddr *socketAddress) {
-	Assert::notNull(socketAddress, __FUNCTION__, __FILE__, __LINE__);
+	AssertNotNull(socketAddress);
 	_socketAddress = 0;
 	if(socketAddress->sa_family == AF_INET) { /* IPv4 */
 		_socketAddress = (struct sockaddr *) new struct sockaddr_in;
@@ -23,15 +23,14 @@ void SocketAddress::initializeWith(const struct sockaddr *socketAddress) {
 	}
 }
 std::string SocketAddress::address() const {
-	Assert::notNull(_socketAddress, __FUNCTION__, __FILE__, __LINE__);
-	if(_socketAddress->sa_family == AF_INET) {
-		char address[INET_ADDRSTRLEN];
-		inet_ntop(AF_INET, &((struct sockaddr_in *) _socketAddress)->sin_addr, address, INET_ADDRSTRLEN);
-		return address;
-	}
-	char address[INET6_ADDRSTRLEN];
-	inet_ntop(AF_INET6, &((struct sockaddr_in6 *) _socketAddress)->sin6_addr, address, INET6_ADDRSTRLEN);
-	return address;
+	AssertNotNull(_socketAddress);
+	int max = (INET_ADDRSTRLEN > INET_ADDRSTRLEN)? INET_ADDRSTRLEN : INET6_ADDRSTRLEN;
+	char stringAddress[max];
+	if(_socketAddress->sa_family == AF_INET)
+		inet_ntop(AF_INET, &((struct sockaddr_in *) _socketAddress)->sin_addr, stringAddress, max);
+	else
+		inet_ntop(AF_INET6, &((struct sockaddr_in6 *) _socketAddress)->sin6_addr, stringAddress, max);
+	return stringAddress;
 }
 std::ostream& operator<<(std::ostream &ostream, const SocketAddress &socketAddress) {
 	ostream << socketAddress.address();

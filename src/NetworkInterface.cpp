@@ -1,20 +1,14 @@
 #include <NetworkInterface.hpp>
 
-NetworkInterface::NetworkInterface() {
-	_name = "Unnamed interface";
-	_flags = 0;
-	_address = _netmask = _broadcast = _pointToPoint = (SocketAddress *) 0;
-}
-
-NetworkInterface::NetworkInterface(const struct ifaddrs *ifa) : NetworkInterface() {
+NetworkInterface::NetworkInterface(const struct ifaddrs *ifa) {
+	this->initializePointers();
 	this->initializeWith(ifa);
 }
 
-NetworkInterface::NetworkInterface(const NetworkInterface &networkInterface) : NetworkInterface() {
-
+NetworkInterface::NetworkInterface(const NetworkInterface &networkInterface) {
+	this->initializePointers();
 	_name = networkInterface._name;
 	_flags = networkInterface._flags;
-
 	if(networkInterface._address != 0) {
 		_address = new SocketAddress(*networkInterface._address);
 	}
@@ -36,34 +30,36 @@ NetworkInterface::~NetworkInterface() {
 	deleteIfNotNull(_pointToPoint);
 }
 
+void NetworkInterface::initializePointers() {
+	_address = _netmask = _broadcast = _pointToPoint = (SocketAddress *) 0;
+}
+
 /* TODO: quitar código repetido de load(), optimizar pedido de memoria. */
 
 void NetworkInterface::initializeWith(const struct ifaddrs *ifa) {
+	AssertNotNull(ifa);
+	if(ifa->ifa_name != 0)
+		_name = ifa->ifa_name;
+	else
+		_name = "Unnamed interface";
 
-	_name = ifa->ifa_name;
 	_flags = ifa->ifa_flags;
 
-	if(ifa->ifa_addr->sa_family != AF_PACKET) {
-
-		deleteIfNotNull(_address);
-		if(ifa->ifa_addr != 0) {
-			_address = new SocketAddress(ifa->ifa_addr);
-		}
-
-		deleteIfNotNull(_netmask);
-		if(ifa->ifa_netmask != 0) {
-			_netmask = new SocketAddress(ifa->ifa_netmask);
-		}
-
-		deleteIfNotNull(_broadcast);
-		if((_flags & IFF_BROADCAST) and (ifa->ifa_broadaddr != 0)) {
-			_broadcast = new SocketAddress(ifa->ifa_broadaddr);
-		}
-
-		deleteIfNotNull(_pointToPoint);
-		if((_flags & IFF_POINTOPOINT) and (ifa->ifa_dstaddr != 0)) {
-			_pointToPoint = new SocketAddress(ifa->ifa_dstaddr);
-		}
+	deleteIfNotNull(_address);
+	if(ifa->ifa_addr != 0) {
+		_address = new SocketAddress(ifa->ifa_addr);
+	}
+	deleteIfNotNull(_netmask);
+	if(ifa->ifa_netmask != 0) {
+		_netmask = new SocketAddress(ifa->ifa_netmask);
+	}
+	deleteIfNotNull(_broadcast);
+	if((_flags & IFF_BROADCAST) and (ifa->ifa_broadaddr != 0)) {
+		_broadcast = new SocketAddress(ifa->ifa_broadaddr);
+	}
+	deleteIfNotNull(_pointToPoint);
+	if((_flags & IFF_POINTOPOINT) and (ifa->ifa_dstaddr != 0)) {
+		_pointToPoint = new SocketAddress(ifa->ifa_dstaddr);
 	}
 }
 
@@ -87,11 +83,13 @@ std::string NetworkInterface::name() const {
 }
 
 std::string NetworkInterface::address() const {
-	return (_address != 0)? _address->address() : "";
+	AssertNotNull(_address);
+	return _address->address();
 }
 
 std::string NetworkInterface::netmask() const {
-	return (_netmask != 0)? _netmask->address() : "";
+	AssertNotNull(_netmask);
+	return _netmask->address();
 }
 
 /*
@@ -104,8 +102,10 @@ std::list<NetworkInterface> NetworkInterface::allInterfaces() {
 		throw Exception(strerror(errno));
 	std::list<NetworkInterface> interfaces;
 	for(ifa = ifap; ifa != 0; ifa = ifa->ifa_next) {
-		NetworkInterface interface(ifa);
-		interfaces.push_back(interface);
+		if(ifa->ifa_addr->sa_family != AF_PACKET) {
+			NetworkInterface interface(ifa);
+			interfaces.push_back(interface);
+		}
 	}
 	::freeifaddrs(ifap);
 	return interfaces;
