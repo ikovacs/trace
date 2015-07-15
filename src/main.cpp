@@ -1,6 +1,5 @@
 /* C++ */
 #include <iostream>
-using namespace std;
 
 /* C */
 #include <cstring>
@@ -117,11 +116,15 @@ unsigned short internetChecksum(const void *buffer, int count) {
 
 #include <NetworkInterface.hpp>
 
+using namespace std;
+
 class TraceApplication {
 public:
 	static int main() {
-		AAA aaa;
-		aaa.allInterfaces();
+		list<NetworkInterface> ifaces = NetworkInterface::allInterfaces();
+		for(list<NetworkInterface>::const_iterator iface = ifaces.begin(); iface != ifaces.end(); iface++) {
+			cout << *iface << endl;
+		}
 		return 0;
 	}
 };

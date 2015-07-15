@@ -2,6 +2,7 @@
 #define __NETWORK_INTERFACE_H__
 
 #include <iostream>
+#include <list>
 
 #include <sys/types.h>
 #include <ifaddrs.h>
@@ -14,13 +15,14 @@
 #include <arpa/inet.h>
 
 #include <Exception.hpp>
+#include <SocketAddress.hpp>
 
 class NetworkInterface {
 public:
 	NetworkInterface();
+	NetworkInterface(const struct ifaddrs *ifa);
+	NetworkInterface(const NetworkInterface &networkInterface);
 	~NetworkInterface();
-
-	void initializeWith(const struct ifaddrs *ifa);
 
 	bool isUp() const;
 	bool isRunning() const;
@@ -30,21 +32,21 @@ public:
 	std::string address() const;
 	std::string netmask() const;
 
+	static std::list<NetworkInterface> allInterfaces();
+
+protected:
+	void initializeWith(const struct ifaddrs *ifa);
+
 protected:
 	std::string _name;
 	unsigned int _flags;
-	struct sockaddr *_address;
-	struct sockaddr *_netmask;
-	struct sockaddr *_broadcast;
-	struct sockaddr *_pointToPoint;
+	SocketAddress *_address;
+	SocketAddress *_netmask;
+	SocketAddress *_broadcast;
+	SocketAddress *_pointToPoint;
 };
 
 std::ostream& operator<<(std::ostream &ostream, const NetworkInterface &networkInterface);
-
-class AAA {
-public:
-	void allInterfaces();
-};
 
 #define GETIFADDR_ERROR -1
 #define deleteIfNotNull(pointer) if(pointer != 0) { delete pointer; pointer = 0; }

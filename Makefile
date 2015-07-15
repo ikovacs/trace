@@ -6,7 +6,7 @@ OBJECTS_FOLDER := obj
 SOURCES := $(wildcard $(SOURCES_FOLDER)/*.cpp)
 HEADERS := $(wildcard $(SOURCES_FOLDER)/*.hpp)
 OBJECTS := $(addprefix $(OBJECTS_FOLDER)/, $(notdir $(SOURCES:%.cpp=%.o)))
-CXX_FLAGS := -g -ggdb -std=c++11 -I./$(HEADERS_FOLDER)/
+CXX_FLAGS := -g -ggdb -std=c++14 -I./$(HEADERS_FOLDER)/
 all: $(TARGET)
 $(TARGET): Makefile $(HEADERS) $(OBJECTS)
 	@mkdir -p $(TARGET_FOLDER)
