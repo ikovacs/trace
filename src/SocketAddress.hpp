@@ -19,6 +19,7 @@ public:
 	~SocketAddress();
 	AddressFamily family() const;
 	std::string toString() const;
+	const struct sockaddr* sockaddr() const;
 protected:
 	void initializeWith(const struct sockaddr *socketAddress);
 protected:

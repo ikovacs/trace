@@ -19,3 +19,7 @@ Socket::Socket() {
 Socket::~Socket() {
 	close(_descriptor);
 }
+
+void Socket::send(const SocketAddress &dst, const Packet &packet) const {
+	//TODO: send packet
+}

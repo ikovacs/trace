@@ -22,6 +22,9 @@ void SocketAddress::initializeWith(const struct sockaddr *socketAddress) {
 		::memcpy(_socketAddress, socketAddress, sizeof(struct sockaddr_in6));
 	}
 }
+const struct sockaddr* SocketAddress::sockaddr() const {
+	return _socketAddress;
+}
 AddressFamily SocketAddress::family() const {
 	return (AddressFamily) _socketAddress->sa_family;
 }

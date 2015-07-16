@@ -25,98 +25,11 @@
 
 #define TIMEOUT 1
 
-/*
-		0                   1                   2                   3
-		0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
-		+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-		|Version|  IHL  |Type of Service|          Total Length         |
-		+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-		|         Identification        |Flags|      Fragment Offset    |
-		+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-		|  Time to Live |    Protocol   |         Header Checksum       |
-		+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-		|                       Source Address                          |
-		+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-		|                    Destination Address                        |
-		+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-		|                    Options                    |    Padding    |
-		+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-
-						Example Internet Datagram Header
-						https://tools.ietf.org/html/rfc791
-*/
-
-#define IPV4_VERSION 4
-#define IPV4_IHL 5
-#define IPV4_PROTO_ICMP 1
-
-struct ipv4_t {
-	unsigned char IHL:4, version:4;
-	unsigned char typeOfService;
-	unsigned short totalLength;
-	unsigned short identifier;
-	unsigned short fragmentOffset:13, flags:3;
-	unsigned char timeToLive;
-	unsigned char protocol;
-	unsigned short headerChecksum;
-	unsigned int sourceAddress;
-	unsigned int destinationAddress;
-
-} __attribute__ ((__packed__));
-
-#define ICMP_ECHO_REQUEST 8
-#define ICMP_ECHO_REPLY 0
-#define ICMP_TIME_EXCEEDED 11
-
-/*
-		0                   1                   2                   3
-		0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
-		+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-		|     Type      |     Code      |          Checksum             |
-		+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-		|                                                               |
-		+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-		|      Internet Header + 64 bits of Original Data Datagram      |
-		+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-
-						https://tools.ietf.org/html/rfc792
-*/
-
-struct icmp_echo_t {
-	unsigned short identifier;
-	unsigned short sequenceNumber;
-
-} __attribute__ ((__packed__));
-
-struct icmp_t {
-	unsigned char type;
-	unsigned char code;
-	unsigned short checksum;
-	union {
-		icmp_echo_t echoRequest;
-		icmp_echo_t echoReply;
-		icmp_echo_t timeExceeded;
-	} data;
-
-} __attribute__ ((__packed__));
-
-unsigned short internetChecksum(const void *buffer, int count) {
-	register long sum = 0;
-	unsigned short *addr = (unsigned short *) buffer;
-	while(count > 1)  {
-		sum += *addr++;
-		count -= 2;
-	}
-	if(count > 0)
-		sum += * (unsigned char *) addr;
-	while(sum >> 16)
-		sum = (sum & 0xFFFF) + (sum >> 16);
-	return ~sum;
-}
-
 #include <NetworkInterface.hpp>
 #include <InternetAddress.hpp>
 #include <Socket.hpp>
+#include <IP.hpp>
+#include <ICMP.hpp>
 
 using namespace std;
 
@@ -136,6 +49,13 @@ public:
 		}
 		/* create socket */
 		Socket socket;
+
+		/* create ip header */
+		unsigned short pid = (unsigned short) (getpid() & 0xFFFF);
+		IP ip(ifaces[1].address(), addresses[0].address(), pid, 64);
+		EchoRequest echoRequest(pid, 2);
+
+		socket.send(addresses[0].address(), ip / echoRequest); // Scapy style (?)
 
 		return 0;
 	}

@@ -8,12 +8,15 @@
 #include <unistd.h>
 
 #include <Exception.hpp>
+#include <Packet.hpp>
+#include <SocketAddress.hpp>
 
 class Socket {
 public:
 	Socket();
 	Socket(const Socket &socket) = delete;
 	~Socket();
+	void send(const SocketAddress &dst, const Packet &packet) const;
 protected:
 	int _descriptor;
 };
