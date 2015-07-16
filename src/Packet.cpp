@@ -12,46 +12,49 @@ std::ostream& operator<<(std::ostream& ostream, const Packet &packet) {
 	return ostream;
 }
 
-EchoRequest::EchoRequest() {
-
-	int identifier = htons((unsigned short) (getpid() & 0xFFFF));
-
+Packet::Packet() {
 	/* Packet */
 	_size = sizeof(struct ipv4_t) + sizeof(struct icmp_t);
 	_packet = new char[_size];
 	memset(_packet, 0, _size);
+}
+Packet::~Packet() {
+	delete[] _packet;
+}
 
+IPv4::IPv4() : Packet() {
 	/* IPv4 */
 	ipv4_t *ipv4 = (ipv4_t *) _packet;
 	ipv4->version = IPV4_VERSION;
 	ipv4->IHL = IPV4_IHL;
 	ipv4->totalLength = htons((unsigned short) (_size & 0xFFFF));
-	ipv4->identifier = identifier;
+	ipv4->identifier = htons((unsigned short) (getpid() & 0xFFFF));
 	ipv4->timeToLive = 255;
 	ipv4->protocol = IPV4_PROTO_ICMP;
-
-	/* ICMPv4 */
-	icmp_t *icmp = (icmp_t *) (_packet + sizeof(struct ipv4_t));
-	icmp->type = ICMP_ECHO_REQUEST;
-	icmp->code = 0;
-
-	/* ICMPv4 EchoRequest */
-	// sicmp_t *icmp = (icmp_t *) (_packet + sizeof(struct ipv4_t));
-	icmp->data.echoRequest.identifier = identifier;
-	icmp->data.echoRequest.sequenceNumber = htons((unsigned short) 1);
-	icmp->checksum = internetChecksum(icmp, sizeof(struct icmp_t));
 }
-
-void EchoRequest::source(const SocketAddress &source) {
+IPv4::~IPv4() {}
+void IPv4::source(const SocketAddress &source) {
 	ipv4_t *ipv4 = (ipv4_t *) _packet;
 	ipv4->sourceAddress = ((const struct sockaddr_in *) source.sockaddr())->sin_addr.s_addr;
 }
-
-void EchoRequest::destination(const SocketAddress &destination) {
+void IPv4::destination(const SocketAddress &destination) {
 	ipv4_t *ipv4 = (ipv4_t *) _packet;
 	ipv4->destinationAddress = ((const struct sockaddr_in *) destination.sockaddr())->sin_addr.s_addr;
 }
 
-EchoRequest::~EchoRequest() {
-	delete[] _packet;
+ICMPv4::ICMPv4() : IPv4() {
+	/* ICMPv4 */
+	icmp_t *icmp = (icmp_t *) (_packet + sizeof(struct ipv4_t));
+	icmp->type = ICMP_ECHO_REQUEST;
+	icmp->code = 0;
 }
+ICMPv4::~ICMPv4() {}
+
+EchoRequest::EchoRequest() : ICMPv4() {
+	/* ICMPv4 EchoRequest */
+	icmp_t *icmp = (icmp_t *) (_packet + sizeof(struct ipv4_t));
+	icmp->data.echoRequest.identifier = htons((unsigned short) (getpid() & 0xFFFF));
+	icmp->data.echoRequest.sequenceNumber = htons((unsigned short) 1);
+	icmp->checksum = internetChecksum(icmp, sizeof(struct icmp_t));
+}
+EchoRequest::~EchoRequest() {}
