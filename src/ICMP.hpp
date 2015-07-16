@@ -40,19 +40,6 @@ struct icmp_t {
 
 } __attribute__ ((__packed__));
 
-class ICMP {
-public:
-	ICMP(unsigned char type);
-	~ICMP();
-protected:
-	icmp_t *_header;
-};
-
-class EchoRequest : public ICMP {
-public:
-	EchoRequest(unsigned short identifier, unsigned short sequenceNumber);
-};
-
 unsigned short internetChecksum(const void *buffer, int count);
 
 #endif /* __ICMP_H__ */

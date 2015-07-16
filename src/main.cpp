@@ -43,7 +43,7 @@ public:
 			cout << ifaces[i] << endl;
 		}
 		/* resolve hostname */
-		vector<InternetAddress> addresses = InternetAddress::resolve("www.google.com");
+		vector<InternetAddress> addresses = InternetAddress::resolve(argv[1]);
 		for(int i = 0; i < addresses.size(); i++) {
 			cout << addresses[i] << endl;
 		}
@@ -52,10 +52,15 @@ public:
 
 		/* create ip header */
 		unsigned short pid = (unsigned short) (getpid() & 0xFFFF);
-		IP ip(ifaces[1].address(), addresses[0].address(), pid, 64);
-		EchoRequest echoRequest(pid, 2);
 
-		socket.send(addresses[0].address(), ip/echoRequest); // Scapy style (?)
+		EchoRequest echoRequest;
+		echoRequest.source(ifaces[1].address());
+		echoRequest.destination(addresses[0].address());
+
+		cout << echoRequest << endl;
+
+		socket.send(addresses[0].address(), echoRequest);
+		// socket.receive();
 
 		return 0;
 	}

@@ -17,11 +17,13 @@ public:
 	Socket(const Socket &socket) = delete;
 	~Socket();
 	void send(const SocketAddress &dst, const Packet &packet) const;
+	Packet receive() const;
 protected:
 	int _descriptor;
 };
 
 #define SOCKET_ERROR -1
+#define SENDTO_ERROR -1
 #define SETSOCKOPT_ERROR -1
 #define TIMEOUT_SECONDS 1
 

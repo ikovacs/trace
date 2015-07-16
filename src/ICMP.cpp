@@ -1,6 +1,8 @@
 
 #include <ICMP.hpp>
 
+/*
+
 ICMP::ICMP(unsigned char type) {
 	_header = new struct icmp_t;
 	::memset(_header, 0, sizeof(struct icmp_t));
@@ -18,6 +20,7 @@ EchoRequest::EchoRequest(unsigned short identifier, unsigned short sequenceNumbe
 	_header->checksum = 0;
 	_header->checksum = internetChecksum(_header, sizeof(struct icmp_t));
 }
+*/
 
 unsigned short internetChecksum(const void *buffer, int count) {
 	register long sum = 0;
