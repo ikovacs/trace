@@ -29,13 +29,17 @@ public:
 	~IPv4();
 	void source(const SocketAddress &source);
 	void destination(const SocketAddress &destination);
+	SocketAddress source() const;
+	SocketAddress destination() const;
 	void timeToLive(unsigned char ttl);
+	int protocol() const;
 };
 
 class ICMPv4 : public IPv4 {
 public:
 	ICMPv4(unsigned char type);
 	~ICMPv4();
+	int type() const;
 };
 
 class EchoRequest : public ICMPv4 {

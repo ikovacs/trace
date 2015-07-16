@@ -66,6 +66,22 @@ public:
 		uint64 elapsed = clock.elapsed();
 		cout << "(" << elapsed << "ms)" << answer << endl;
 
+		IPv4 *ipv4 = (IPv4 *) &answer;
+
+		cout << "from:" << ipv4->source() << " to:" << ipv4->destination() << endl;
+
+		if(ipv4->protocol() == IPV4_PROTO_ICMP) {
+			ICMPv4 *icmp = (ICMPv4 *) ipv4;
+			if(icmp->type() == ICMP_ECHO_REPLY)
+				cout << "echo-reply" << endl;
+			else if(icmp->type() == ICMP_ECHO_REQUEST)
+				cout << "echo-request" << endl;
+			else if(icmp->type() == ICMP_TIME_EXCEEDED)
+				cout << "time-exceeded" << endl;
+			else
+				cout << "icmp" << endl;
+		}
+
 		return 0;
 	}
 };

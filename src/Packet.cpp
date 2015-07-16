@@ -32,9 +32,29 @@ void IPv4::destination(const SocketAddress &destination) {
 	ipv4_t *ipv4 = (ipv4_t *) _packet;
 	ipv4->destinationAddress = ((const struct sockaddr_in *) destination.sockaddr())->sin_addr.s_addr;
 }
+SocketAddress IPv4::source() const {
+	ipv4_t *ipv4 = (ipv4_t *) _packet;
+	struct sockaddr_in address;
+	memset(&address, 0, sizeof(struct sockaddr_in));
+	address.sin_family = AF_INET;
+	address.sin_addr.s_addr = ipv4->sourceAddress;
+	return SocketAddress((const struct sockaddr *) &address);
+}
+SocketAddress IPv4::destination() const {
+	ipv4_t *ipv4 = (ipv4_t *) _packet;
+	struct sockaddr_in address;
+	memset(&address, 0, sizeof(struct sockaddr_in));
+	address.sin_family = AF_INET;
+	address.sin_addr.s_addr = ipv4->destinationAddress;
+	return SocketAddress((const struct sockaddr *) &address);
+}
 void IPv4::timeToLive(unsigned char ttl) {
 	ipv4_t *ipv4 = (ipv4_t *) _packet;
 	ipv4->timeToLive = ttl;
+}
+int IPv4::protocol() const {
+	ipv4_t *ipv4 = (ipv4_t *) _packet;
+	return ipv4->protocol;
 }
 
 ICMPv4::ICMPv4(unsigned char type) : IPv4(IPV4_PROTO_ICMP) {
@@ -44,6 +64,10 @@ ICMPv4::ICMPv4(unsigned char type) : IPv4(IPV4_PROTO_ICMP) {
 	icmp->code = 0;
 }
 ICMPv4::~ICMPv4() {}
+int ICMPv4::type() const {
+	icmp_t *icmp = (icmp_t *) (_packet + sizeof(struct ipv4_t));
+	return icmp->type;
+}
 
 EchoRequest::EchoRequest(unsigned short sequenceNumber) : ICMPv4(ICMP_ECHO_REQUEST) {
 	/* ICMPv4 EchoRequest */
