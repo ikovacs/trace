@@ -55,7 +55,7 @@ public:
 		IP ip(ifaces[1].address(), addresses[0].address(), pid, 64);
 		EchoRequest echoRequest(pid, 2);
 
-		socket.send(addresses[0].address(), ip / echoRequest); // Scapy style (?)
+		socket.send(addresses[0].address(), ip/echoRequest); // Scapy style (?)
 
 		return 0;
 	}

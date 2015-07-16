@@ -5,8 +5,8 @@
 #include <unistd.h>
 
 #include <SocketAddress.hpp>
-#include <Packet.hpp>
 #include <ICMP.hpp>
+#include <Packet.hpp>
 
 /*
 		0                   1                   2                   3
@@ -51,9 +51,7 @@ class IP {
 public:
 	IP(const SocketAddress &src, const SocketAddress &dst, unsigned short identifier, unsigned char ttl);
 	~IP();
-
-	Packet operator/(const ICMP &icmp) const;
-
+	Packet operator/(const ICMP &icmp);
 protected:
 	ipv4_t *_header;
 };

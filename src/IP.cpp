@@ -17,11 +17,6 @@ IP::~IP() {
 	delete _header;
 }
 
-Packet IP::operator/(const ICMP &icmp) const {
-	Packet packet;
-	/* Set protocol type to ICMP */
-	_header->protocol = IPV4_PROTO_ICMP;
-	/* Store into packet along with icmp payload */
-	packet << *this << icmp;
-	return packet;
+Packet IP::operator/(const ICMP &icmp) {
+	return Packet();
 }
