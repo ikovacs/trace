@@ -1,22 +1,13 @@
 
 #include <Packet.hpp>
 
-std::ostream& operator<<(std::ostream& ostream, const Packet &packet) {
-	ostream << "Packet("<< packet._size << " bytes) [";
-	for(int i = 0; (packet._size > 0) and (i < (packet._size - 1)); i++) {
-		ostream << std::hex << (int) (unsigned char) packet._packet[i] << " ";
-	}
-	if(packet._size > 0)
-		ostream << std::hex << (int) (unsigned char) packet._packet[(packet._size - 1)];
-	ostream << "]";
-	return ostream;
-}
+//TODO: Probar que no pierda memoria en un programa aparte.
 
 Packet::Packet() {
 	/* Packet */
 	_size = sizeof(struct ipv4_t) + sizeof(struct icmp_t);
-	_packet = new char[_size];
-	memset(_packet, 0, _size);
+	_packet = new char[PACKET_MAX];
+	memset(_packet, 0, PACKET_MAX);
 }
 Packet::~Packet() {
 	delete[] _packet;
@@ -58,3 +49,17 @@ EchoRequest::EchoRequest() : ICMPv4() {
 	icmp->checksum = internetChecksum(icmp, sizeof(struct icmp_t));
 }
 EchoRequest::~EchoRequest() {}
+
+std::ostream& operator<<(std::ostream& ostream, const Packet &packet) {
+	std::ios state(0);
+    state.copyfmt(ostream);
+	ostream << "Packet("<< packet._size << " bytes) [";
+	for(int i = 0; (packet._size > 0) and (i < (packet._size - 1)); i++) {
+		ostream << std::hex << std::setw(2) << std::setfill('0') << (int) (unsigned char) packet._packet[i] << " ";
+	}
+	if(packet._size > 0)
+		ostream << std::hex << std::setw(2) << std::setfill('0') << (int) (unsigned char) packet._packet[(packet._size - 1)];
+	ostream << "]";
+	ostream.copyfmt(state);
+	return ostream;
+}

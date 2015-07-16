@@ -51,4 +51,6 @@ class DestinationUnreachable : public ICMPv4 {};
 
 std::ostream& operator<<(std::ostream& ostream, const Packet &packet);
 
+#define PACKET_MAX 65535
+
 #endif /* __PACKET_H__ */

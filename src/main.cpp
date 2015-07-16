@@ -57,10 +57,14 @@ public:
 		echoRequest.source(ifaces[1].address());
 		echoRequest.destination(addresses[0].address());
 
+		Packet packet;
+
 		cout << echoRequest << endl;
 
 		socket.send(addresses[0].address(), echoRequest);
-		// socket.receive();
+		socket.receive(packet);
+
+		cout << packet << endl;
 
 		return 0;
 	}
