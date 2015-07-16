@@ -8,9 +8,9 @@
 #include <iostream>
 #include <iomanip>
 
-class ByteArray {
-};
+class ByteArray {};
 class Packet : public ByteArray {
+public:
 protected:
 	char *_packet;
 	int _size;

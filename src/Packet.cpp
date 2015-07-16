@@ -2,23 +2,27 @@
 #include <Packet.hpp>
 
 std::ostream& operator<<(std::ostream& ostream, const Packet &packet) {
-	ostream << "Packet("<< packet._size << " bytes) | ";
+	ostream << "Packet("<< packet._size << " bytes) [";
 	for(int i = 0; (packet._size > 0) and (i < (packet._size - 1)); i++) {
 		ostream << std::hex << (int) (unsigned char) packet._packet[i] << " ";
 	}
 	if(packet._size > 0)
 		ostream << std::hex << (int) (unsigned char) packet._packet[(packet._size - 1)];
+	ostream << "]";
 	return ostream;
 }
 
 EchoRequest::EchoRequest() {
+
 	int identifier = htons((unsigned short) (getpid() & 0xFFFF));
+
+	/* Packet */
 	_size = sizeof(struct ipv4_t) + sizeof(struct icmp_t);
 	_packet = new char[_size];
 	memset(_packet, 0, _size);
-	ipv4_t *ipv4 = (ipv4_t *) _packet;
-	icmp_t *icmp = (icmp_t *) (_packet + sizeof(struct ipv4_t));
 
+	/* IPv4 */
+	ipv4_t *ipv4 = (ipv4_t *) _packet;
 	ipv4->version = IPV4_VERSION;
 	ipv4->IHL = IPV4_IHL;
 	ipv4->totalLength = htons((unsigned short) (_size & 0xFFFF));
@@ -26,8 +30,13 @@ EchoRequest::EchoRequest() {
 	ipv4->timeToLive = 255;
 	ipv4->protocol = IPV4_PROTO_ICMP;
 
+	/* ICMPv4 */
+	icmp_t *icmp = (icmp_t *) (_packet + sizeof(struct ipv4_t));
 	icmp->type = ICMP_ECHO_REQUEST;
 	icmp->code = 0;
+
+	/* ICMPv4 EchoRequest */
+	// sicmp_t *icmp = (icmp_t *) (_packet + sizeof(struct ipv4_t));
 	icmp->data.echoRequest.identifier = identifier;
 	icmp->data.echoRequest.sequenceNumber = htons((unsigned short) 1);
 	icmp->checksum = internetChecksum(icmp, sizeof(struct icmp_t));
