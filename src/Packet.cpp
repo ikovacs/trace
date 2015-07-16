@@ -13,7 +13,7 @@ Packet::~Packet() {
 	delete[] _packet;
 }
 
-IPv4::IPv4() : Packet() {
+IPv4::IPv4(unsigned char protocol) : Packet() {
 	/* IPv4 */
 	ipv4_t *ipv4 = (ipv4_t *) _packet;
 	ipv4->version = IPV4_VERSION;
@@ -21,7 +21,7 @@ IPv4::IPv4() : Packet() {
 	ipv4->totalLength = htons((unsigned short) (_size & 0xFFFF));
 	ipv4->identifier = htons((unsigned short) (getpid() & 0xFFFF));
 	ipv4->timeToLive = 255;
-	ipv4->protocol = IPV4_PROTO_ICMP;
+	ipv4->protocol = protocol;
 }
 IPv4::~IPv4() {}
 void IPv4::source(const SocketAddress &source) {
@@ -32,20 +32,24 @@ void IPv4::destination(const SocketAddress &destination) {
 	ipv4_t *ipv4 = (ipv4_t *) _packet;
 	ipv4->destinationAddress = ((const struct sockaddr_in *) destination.sockaddr())->sin_addr.s_addr;
 }
+void IPv4::timeToLive(unsigned char ttl) {
+	ipv4_t *ipv4 = (ipv4_t *) _packet;
+	ipv4->timeToLive = ttl;
+}
 
-ICMPv4::ICMPv4() : IPv4() {
+ICMPv4::ICMPv4(unsigned char type) : IPv4(IPV4_PROTO_ICMP) {
 	/* ICMPv4 */
 	icmp_t *icmp = (icmp_t *) (_packet + sizeof(struct ipv4_t));
-	icmp->type = ICMP_ECHO_REQUEST;
+	icmp->type = type;
 	icmp->code = 0;
 }
 ICMPv4::~ICMPv4() {}
 
-EchoRequest::EchoRequest() : ICMPv4() {
+EchoRequest::EchoRequest(unsigned short sequenceNumber) : ICMPv4(ICMP_ECHO_REQUEST) {
 	/* ICMPv4 EchoRequest */
 	icmp_t *icmp = (icmp_t *) (_packet + sizeof(struct ipv4_t));
 	icmp->data.echoRequest.identifier = htons((unsigned short) (getpid() & 0xFFFF));
-	icmp->data.echoRequest.sequenceNumber = htons((unsigned short) 1);
+	icmp->data.echoRequest.sequenceNumber = htons((unsigned short) sequenceNumber);
 	icmp->checksum = internetChecksum(icmp, sizeof(struct icmp_t));
 }
 EchoRequest::~EchoRequest() {}

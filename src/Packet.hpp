@@ -25,21 +25,22 @@ class IPv6 : public Packet {};
 
 class IPv4 : public Packet {
 public:
-	IPv4();
+	IPv4(unsigned char protocol);
 	~IPv4();
 	void source(const SocketAddress &source);
 	void destination(const SocketAddress &destination);
+	void timeToLive(unsigned char ttl);
 };
 
 class ICMPv4 : public IPv4 {
 public:
-	ICMPv4();
+	ICMPv4(unsigned char type);
 	~ICMPv4();
 };
 
 class EchoRequest : public ICMPv4 {
 public:
-	EchoRequest();
+	EchoRequest(unsigned short sequenceNumber);
 	~EchoRequest();
 };
 

@@ -28,8 +28,8 @@
 #include <NetworkInterface.hpp>
 #include <InternetAddress.hpp>
 #include <Socket.hpp>
-#include <IP.hpp>
-#include <ICMP.hpp>
+#include <Packet.hpp>
+#include <Clock.hpp>
 
 using namespace std;
 
@@ -53,18 +53,18 @@ public:
 		/* create ip header */
 		unsigned short pid = (unsigned short) (getpid() & 0xFFFF);
 
-		EchoRequest echoRequest;
+		Packet answer;
+		EchoRequest echoRequest(1);
 		echoRequest.source(ifaces[1].address());
 		echoRequest.destination(addresses[0].address());
-
-		Packet packet;
-
+		echoRequest.timeToLive(64);
 		cout << echoRequest << endl;
-
+		Clock clock;
+		clock.start();
 		socket.send(addresses[0].address(), echoRequest);
-		socket.receive(packet);
-
-		cout << packet << endl;
+		socket.receive(answer);
+		uint64 elapsed = clock.elapsed();
+		cout << "(" << elapsed << "ms)" << answer << endl;
 
 		return 0;
 	}
