@@ -26,4 +26,6 @@ protected:
 
 std::ostream& operator<<(std::ostream &ostream, const Exception &exception);
 
+#define FullException(message) Exception(message, __FUNCTION__, __FILE__, __LINE__)
+
 #endif /* __EXCEPTION_H__ */

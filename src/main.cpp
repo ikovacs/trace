@@ -116,6 +116,7 @@ unsigned short internetChecksum(const void *buffer, int count) {
 
 #include <NetworkInterface.hpp>
 #include <InternetAddress.hpp>
+#include <Socket.hpp>
 
 using namespace std;
 
@@ -124,21 +125,17 @@ public:
 	static int execute(int argc, char *argv[]) {
 
 		/* list interfaces */
-		const NetworkInterface *enp2s0;
 		vector<NetworkInterface> ifaces = NetworkInterface::allInterfaces();
-		for(vector<NetworkInterface>::const_iterator iface = ifaces.begin(); iface != ifaces.end(); iface++) {
-			if(iface->name() == "enp2s0" and iface->address().family() == IPv4AddressFamily) {
-				enp2s0 = &*iface;
-				cout << *enp2s0 << endl;
-			}
+		for(int i = 0; i < ifaces.size(); i++) {
+			cout << ifaces[i] << endl;
 		}
-
 		/* resolve hostname */
-
 		vector<InternetAddress> addresses = InternetAddress::resolve("www.google.com");
 		for(int i = 0; i < addresses.size(); i++) {
 			cout << addresses[i] << endl;
 		}
+		/* create socket */
+		Socket socket;
 
 		return 0;
 	}
@@ -150,66 +147,6 @@ int main(int argc, char *argv[]) {
 
 /*
 int main(int argc, char *argv[]) {
-
-	int answer;
-
-	int maxPingPerTtl = std::stoi(argv[1]);
-
-	if(argc < 3)
-		return -1;
-
-	const char *iface = argv[2];
-	const char *host = argv[3];
-
-	//cout << "Interface: " << iface << endl;
-	//cout << "Destination: " << host << endl;
-
-	// Resolve host address. /
-	struct sockaddr_in destination;
-	const char *service = 0;
-	struct addrinfo hints, *aip, *ai;
-	::memset(&hints, 0, sizeof(struct addrinfo));
-	hints.ai_flags =  AI_CANONNAME;
-	hints.ai_family = AF_INET;
-	hints.ai_socktype = SOCK_STREAM;
-	if((answer = ::getaddrinfo(host, service, &hints, &aip)) != GETADDRINFO_SUCCESS) {
-		cerr << gai_strerror(answer) << endl;
-		return -1;
-	}
-	for(ai = aip; ai != 0; ai = ai->ai_next) {
-		struct sockaddr_in *address = (struct sockaddr_in *) ai->ai_addr;
-		cout << "# " << ai->ai_canonname << " " << inet_ntoa(address->sin_addr) << endl;
-		::memcpy(&destination, address, sizeof(struct sockaddr_in));
-		break;
-	}
-	if(aip == 0) {
-		cerr << "Unknown interface" << endl;
-		return -1;
-	}
-	::freeaddrinfo(aip);
-
-	// Create socket /
-	int socketDescriptor;
-	if((socketDescriptor = ::socket(AF_INET, SOCK_RAW, IPPROTO_ICMP)) == SOCKET_ERROR) {
-		cerr << strerror(errno) << endl;
-		return -1;
-	}
-	int hdrincl = 1;
-	if(::setsockopt(socketDescriptor, IPPROTO_IP, IP_HDRINCL, &hdrincl, sizeof(hdrincl)) == SETSOCKOPT_ERROR) {
-		cerr << strerror(errno) << endl;
-		return -1;
-	}
-	struct timeval timeOut;
-	timeOut.tv_sec = TIMEOUT;
-	timeOut.tv_usec = 0;
-	if(::setsockopt(socketDescriptor, SOL_SOCKET, SO_RCVTIMEO, &timeOut, sizeof(struct timeval)) == SETSOCKOPT_ERROR) {
-		cerr << strerror(errno) << endl;
-		return -1;
-	}
-	if(::setsockopt(socketDescriptor, SOL_SOCKET, SO_SNDTIMEO, &timeOut, sizeof(struct timeval)) == SETSOCKOPT_ERROR) {
-		cerr << strerror(errno) << endl;
-		return -1;
-	}
 
 	// Create echo-request /
 	int echoRequestLength = sizeof(struct ipv4_t) + sizeof(struct icmp_t);
