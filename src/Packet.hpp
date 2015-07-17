@@ -42,9 +42,17 @@ public:
 	int type() const;
 };
 
-class EchoRequest : public ICMPv4 {
+class Echo : public ICMPv4 {
 public:
-	EchoRequest(unsigned short sequenceNumber);
+	Echo(unsigned char type);
+	int identifier() const;
+	void sequenceNumber(unsigned short sequenceNumber);
+	int sequenceNumber() const;
+};
+
+class EchoRequest : public Echo {
+public:
+	EchoRequest();
 	~EchoRequest();
 };
 

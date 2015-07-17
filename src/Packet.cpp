@@ -69,13 +69,28 @@ int ICMPv4::type() const {
 	return icmp->type;
 }
 
-EchoRequest::EchoRequest(unsigned short sequenceNumber) : ICMPv4(ICMP_ECHO_REQUEST) {
-	/* ICMPv4 EchoRequest */
+Echo::Echo(unsigned char type) : ICMPv4(type) {
 	icmp_t *icmp = (icmp_t *) (_packet + sizeof(struct ipv4_t));
 	icmp->data.echoRequest.identifier = htons((unsigned short) (getpid() & 0xFFFF));
-	icmp->data.echoRequest.sequenceNumber = htons((unsigned short) sequenceNumber);
+	icmp->data.echoRequest.sequenceNumber = htons((unsigned short) 0);
 	icmp->checksum = internetChecksum(icmp, sizeof(struct icmp_t));
 }
+int Echo::identifier() const {
+	icmp_t *icmp = (icmp_t *) (_packet + sizeof(struct ipv4_t));
+	return (int) ntohs(icmp->data.echoRequest.identifier);
+}
+void Echo::sequenceNumber(unsigned short sequenceNumber) {
+	icmp_t *icmp = (icmp_t *) (_packet + sizeof(struct ipv4_t));
+	icmp->data.echoRequest.sequenceNumber = htons(sequenceNumber);
+	icmp->checksum = 0;
+	icmp->checksum = internetChecksum(icmp, sizeof(struct icmp_t));
+}
+int Echo::sequenceNumber() const {
+	icmp_t *icmp = (icmp_t *) (_packet + sizeof(struct ipv4_t));
+	return ntohs(icmp->data.echoRequest.sequenceNumber);
+}
+
+EchoRequest::EchoRequest() : Echo(ICMP_ECHO_REQUEST) {}
 EchoRequest::~EchoRequest() {}
 
 std::ostream& operator<<(std::ostream& ostream, const Packet &packet) {

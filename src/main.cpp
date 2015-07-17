@@ -8,6 +8,14 @@
 
 using namespace std;
 
+/*
+	TODO:
+	· Solucionar problema con la interfaz de loop.
+ 		"Exception: Address family not supported by protocol at: send (src/Socket.cpp:26)"
+	· Solucionar tema de diseño Paquetes.
+		"Qué pasa cuando recibimos un IPv4 con tamaño != 20 bytes."
+*/
+
 class TraceApplication {
 public:
 	static int execute(int argc, char *argv[]) {
@@ -22,7 +30,7 @@ public:
 		Socket socket;
 
 		/* create echoRequest */
-		EchoRequest echoRequest(1);
+		EchoRequest echoRequest;
 		echoRequest.source(ifaces[1].address());
 		echoRequest.destination(addresses[0].address());
 		echoRequest.timeToLive(64);
@@ -32,11 +40,13 @@ public:
 
 		bool done = false;
 		unsigned char ttl = 1;
+		unsigned short sequenceNumber = 0;
 		uint64 elapsed;
 
 		while((!done) and (ttl < 256)) {
 
 			echoRequest.timeToLive(ttl++);
+			echoRequest.sequenceNumber(sequenceNumber++);
 
 			try {
 				clock.start();
@@ -54,6 +64,7 @@ public:
 			if(ipv4->protocol() == IPV4_PROTO_ICMP) {
 
 				ICMPv4 *icmp = (ICMPv4 *) ipv4;
+				Echo *echo = (Echo *) icmp;
 
 				switch(icmp->type()) {
 				case ICMP_ECHO_REQUEST:
@@ -61,7 +72,7 @@ public:
 					break;
 				case ICMP_ECHO_REPLY:
 					cout << "EchoReply(";
-					done = true;
+					done = (echo->sequenceNumber() == echoRequest.sequenceNumber()) and (echo->identifier() == echoRequest.identifier());
 					break;
 				case ICMP_TIME_EXCEEDED:
 					cout << "TimeExceeded(";
@@ -69,8 +80,9 @@ public:
 				default:
 					cout << "Unknown(";
 				}
-
-				cout << "ttl=" << (ttl-1);
+				cout << "id=" << echo->identifier();
+				cout << ",seq=" << echo->sequenceNumber();
+				cout << ",ttl=" << (ttl-1);
 				cout << ",from=" << ipv4->source().hostname();
 				cout << ",to=" << ipv4->destination().hostname();
 				cout << ",ms=" << elapsed;
