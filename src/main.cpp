@@ -14,49 +14,70 @@ public:
 
 		/* list interfaces */
 		vector<NetworkInterface> ifaces = NetworkInterface::allInterfaces();
-		for(int i = 0; i < ifaces.size(); i++) {
-			cout << ifaces[i] << endl;
-		}
+
 		/* resolve hostname */
 		vector<InternetAddress> addresses = InternetAddress::resolve(argv[1]);
-		for(int i = 0; i < addresses.size(); i++) {
-			cout << addresses[i] << endl;
-		}
+
 		/* create socket */
 		Socket socket;
 
-		/* create ip header */
-		unsigned short pid = (unsigned short) (getpid() & 0xFFFF);
-
-		Packet answer;
+		/* create echoRequest */
 		EchoRequest echoRequest(1);
 		echoRequest.source(ifaces[1].address());
 		echoRequest.destination(addresses[0].address());
 		echoRequest.timeToLive(64);
-		cout << echoRequest << endl;
+
+		Packet answer;
 		Clock clock;
-		clock.start();
-		socket.send(addresses[0].address(), echoRequest);
-		socket.receive(answer);
-		uint64 elapsed = clock.elapsed();
-		cout << "(" << elapsed << "ms)" << endl << answer << endl;
 
-		IPv4 *ipv4 = (IPv4 *) &answer;
+		bool done = false;
+		unsigned char ttl = 1;
+		uint64 elapsed;
 
-		cout << "from:" << ipv4->source().hostname() << " to:" << ipv4->destination().hostname() << endl;
+		while((!done) and (ttl < 256)) {
 
-		if(ipv4->protocol() == IPV4_PROTO_ICMP) {
-			ICMPv4 *icmp = (ICMPv4 *) ipv4;
-			if(icmp->type() == ICMP_ECHO_REPLY)
-				cout << "echo-reply" << endl;
-			else if(icmp->type() == ICMP_ECHO_REQUEST)
-				cout << "echo-request" << endl;
-			else if(icmp->type() == ICMP_TIME_EXCEEDED)
-				cout << "time-exceeded" << endl;
-			else
-				cout << "icmp" << endl;
+			echoRequest.timeToLive(ttl++);
+
+			try {
+				clock.start();
+				socket.send(addresses[0].address(), echoRequest);
+				socket.receive(answer);
+				elapsed = clock.elapsed();
+			}
+			catch(Exception &exception) {
+				cerr << exception << endl;
+				continue;
+			}
+
+			IPv4 *ipv4 = (IPv4 *) &answer;
+
+			if(ipv4->protocol() == IPV4_PROTO_ICMP) {
+
+				ICMPv4 *icmp = (ICMPv4 *) ipv4;
+
+				switch(icmp->type()) {
+				case ICMP_ECHO_REQUEST:
+					cout << "EchoRequest(";
+					break;
+				case ICMP_ECHO_REPLY:
+					cout << "EchoReply(";
+					done = true;
+					break;
+				case ICMP_TIME_EXCEEDED:
+					cout << "TimeExceeded(";
+					break;
+				default:
+					cout << "Unknown(";
+				}
+
+				cout << "ttl=" << (ttl-1);
+				cout << ",from=" << ipv4->source().hostname();
+				cout << ",to=" << ipv4->destination().hostname();
+				cout << ",ms=" << elapsed;
+				cout << ")" << endl;
+			}
+			sleep(1);
 		}
-
 		return 0;
 	}
 };
