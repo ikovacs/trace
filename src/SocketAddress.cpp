@@ -38,6 +38,14 @@ std::string SocketAddress::toString() const {
 		inet_ntop(AF_INET6, &((struct sockaddr_in6 *) _socketAddress)->sin6_addr, stringAddress, max);
 	return stringAddress;
 }
+std::string SocketAddress::hostname() const {
+	char host[NI_MAXHOST], service[NI_MAXSERV];
+	int size = (_socketAddress->sa_family == AF_INET)? sizeof(struct sockaddr_in) : sizeof(struct sockaddr_in6);
+	int answer = getnameinfo(_socketAddress, size, host, NI_MAXHOST, service, NI_MAXSERV, NI_NUMERICSERV);
+	if(answer != GETNAMEINFO_SUCCESS)
+		throw FullException(gai_strerror(answer));
+	return std::string(host);
+}
 std::ostream& operator<<(std::ostream &ostream, const SocketAddress &socketAddress) {
 	ostream << socketAddress.toString();
 	return ostream;

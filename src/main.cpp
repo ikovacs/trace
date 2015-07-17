@@ -39,11 +39,11 @@ public:
 		socket.send(addresses[0].address(), echoRequest);
 		socket.receive(answer);
 		uint64 elapsed = clock.elapsed();
-		cout << "(" << elapsed << "ms)" << answer << endl;
+		cout << "(" << elapsed << "ms)" << endl << answer << endl;
 
 		IPv4 *ipv4 = (IPv4 *) &answer;
 
-		cout << "from:" << ipv4->source() << " to:" << ipv4->destination() << endl;
+		cout << "from:" << ipv4->source().hostname() << " to:" << ipv4->destination().hostname() << endl;
 
 		if(ipv4->protocol() == IPV4_PROTO_ICMP) {
 			ICMPv4 *icmp = (ICMPv4 *) ipv4;
@@ -64,21 +64,3 @@ public:
 int main(int argc, char *argv[]) {
 	return TraceApplication::execute(argc, argv);
 }
-
-/*
-int main(int argc, char *argv[]) {
-
-	// Translate SocketAddress to hostname.
-	char answer_host[NI_MAXHOST], answer_service[NI_MAXSERV];
-	struct sockaddr_in answer_address;
-	::memset(&answer_address, 0, sizeof(struct sockaddr_in));
-	answer_address.sin_family = AF_INET;
-	answer_address.sin_addr.s_addr = answer_ipv4->sourceAddress;
-	answer = getnameinfo((struct sockaddr *) &answer_address, sizeof(struct sockaddr_in), answer_host, NI_MAXHOST, answer_service, NI_MAXSERV, NI_NUMERICSERV);
-	if(answer != 0) {
-		cerr << gai_strerror(answer) << endl;
-		answer_host[0] = 0;
-	}
-	return 0;
-}
-*/

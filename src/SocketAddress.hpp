@@ -6,6 +6,8 @@
 #include <string.h>
 
 #include <arpa/inet.h>
+#include <sys/socket.h>
+#include <netdb.h>
 
 #include <Exception.hpp>
 #include <Assert.hpp>
@@ -20,6 +22,7 @@ public:
 	AddressFamily family() const;
 	std::string toString() const;
 	const struct sockaddr* sockaddr() const;
+	std::string hostname() const;
 protected:
 	void initializeWith(const struct sockaddr *socketAddress);
 protected:
@@ -27,5 +30,7 @@ protected:
 };
 
 std::ostream& operator<<(std::ostream &ostream, const SocketAddress &socketAddress);
+
+#define GETNAMEINFO_SUCCESS 0
 
 #endif /* __SOCKET_ADDRESS_H__ */
