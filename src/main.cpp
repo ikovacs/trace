@@ -13,7 +13,7 @@ using namespace std;
 	· Solucionar problema con la interfaz de loop.
  		"Exception: Address family not supported by protocol at: send (src/Socket.cpp:26)"
 	· Solucionar tema de diseño Paquetes.
-		"Qué pasa cuando recibimos un IPv4 con tamaño != 20 bytes."
+		"Qué pasa cuando recibimos un IPv4 con tamaño != 20 bytes. Crear un parser de paquetes."
 */
 
 class TraceApplication {
@@ -55,7 +55,7 @@ public:
 				elapsed = clock.elapsed();
 			}
 			catch(Exception &exception) {
-				cerr << exception << endl;
+				cout << "***" << endl;
 				continue;
 			}
 
@@ -88,7 +88,6 @@ public:
 				cout << ",ms=" << elapsed;
 				cout << ")" << endl;
 			}
-			sleep(1);
 		}
 		return 0;
 	}
